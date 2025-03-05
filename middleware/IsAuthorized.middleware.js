@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken")
-require("dontenv")
+require("dotenv").config();
 
 const isAuthorized = (req, res, next) => {
 
@@ -11,22 +11,22 @@ const isAuthorized = (req, res, next) => {
     if (!token) {
 
         console.log("No token provided")
-        return res.status(403).json({message:"No token provided, access denied"})
-    
+        return res.status(403).json({ message: "No token provided, access denied" })
+
     }
 
     jwt.verify(token, process.env.JWT_SECRET, (err, decode) => {
 
         if (err) {
-            
-            return res.status(401).json({message:"Invalid or expire token"})
+
+            return res.status(401).json({ message: "Invalid or expire token" })
         }
         console.log("Token verified successfully")
-        
+
         req.user = decode
 
         console.log(decode)
-        
+
 
         next();
     });

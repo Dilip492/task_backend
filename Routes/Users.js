@@ -9,9 +9,9 @@ require('dotenv').config();
 
 router.post('/CreateUser', async (req, res) => {
 
-    const { name, email, password  } = req.body;
+    const { name, email, password , roles} = req.body;
 
-    if (!name || !email || !password ) {
+    if (!name || !email || !password) {
         return res.status(400).json({ message: "Please fill all the value" })
     }
 
@@ -26,21 +26,21 @@ router.post('/CreateUser', async (req, res) => {
 
         const hasspass = await bcrypt.hash(password, salt)
 
-        const User = await UserModel({ name, email, password: hasspass });
+        const User = await UserModel({ name, email, password: hasspass , roles});
 
         await User.save();
 
         const payload = {
             UserId: {
                 id: User._id,
-            
-            }
+            },
+            roles:User.roles
         }
 
         const token = jwt.sign(payload, process.env.JWT_SECRET)
 
         // console.log(token)
-        res.status(200).json({ message: "user create the successfully" })
+        res.status(200).json({ message: "user create the successfully", token })
 
     } catch (error) {
         console.error(error)
@@ -83,7 +83,7 @@ router.get("/getUser/:Id", async (req, res) => {
 
 router.put("/updateUser/:Id", async (req, res) => {
 
-    const { name, email, password } = req.body;
+    const { name, email, password  } = req.body;
     const userId = req.params.Id;
 
     if (!name || !email || !password) {
@@ -140,35 +140,44 @@ router.delete("/DeleteUser/:Id", async (req, res) => {
 
 // user login route 
 
-router.post('/login', async(req, res)=>{
-    const{ email , password} = req.body;
+router.post('/login', async (req, res) => {
+    const { email, password } = req.body;
 
-    if(!email || !password){
+    if (!email || !password) {
         return res.status(400).json({
-            message:"Provide both email and password"
+            message: "Provide both email and password"
         })
     }
 
 
     try {
 
-        const user = await UserModel.findOne({email})
+        const user = await UserModel.findOne({ email })
 
-       if(!user){
-        return res.status(400).json({message:"Invaid email or password1"})
-       }
+        if (!user) {
+            return res.status(400).json({ message: "Invaid email or password1" })
+        }
 
-       const isMatch = await bcrypt.compare(password, user.password);
+        const isMatch = await bcrypt.compare(password, user.password);
 
-       if(!isMatch){
-        return res.status(400).json({message:"Invalid email or password2"})
-       }
+        if (!isMatch) {
+            return res.status(400).json({ message: "Invalid email or password2" })
+        }
 
-       return res.status(200).json({message:"Login successfuly"})
+        const payload = {
+            UserId: {
+                id: user._id,
+            },
+            roles:user.roles
+        }
 
-        
+        const token = jwt.sign(payload, process.env.JWT_SECRET)
+
+        return res.status(200).json({ message: "Login successfuly", token })
+
+
     } catch (error) {
-        
+
     }
 })
 
