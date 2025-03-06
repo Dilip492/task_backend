@@ -3,6 +3,8 @@ const app = express();
 const { Roles } = require('./Constants/roles')
 const cookieParser = require("cookie-parser");
 
+const cors = require("cors")
+
 
 const port = 8000;
 
@@ -13,9 +15,15 @@ const connectTodb = require("./db")
 connectTodb();
 
 
-
+const corsOptions = {
+    origin: process.env.CORS_URL, 
+    methods: 'GET,POST,PUT,DELETE',     
+    allowedHeaders: 'Content-Type', 
+    credentials: true, 
+}
 
 app.use(express.json())
+app.use(cors(corsOptions))
 app.use(cookieParser());
 
 

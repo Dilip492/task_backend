@@ -9,11 +9,22 @@ require('dotenv').config();
 
 router.post('/CreateUser', async (req, res) => {
 
-    const { name, email, password , roles} = req.body;
+    const { name, email, password, roles } = req.body;
 
     if (!name || !email || !password) {
         return res.status(400).json({ message: "Please fill all the value" })
     }
+
+    const nameRegex = /^[A-Za-z\s]+$/; 
+
+   
+    if (!nameRegex.test(name)) {
+        return res.status(400).json({ message: "Name must only contain alphabetic characters and spaces" });
+    }
+
+     if(password.length < 8 ){
+        return res.status(400).json({message:"Password must be greater than or equal to 8 characters"})
+     }
 
     try {
 
@@ -26,7 +37,7 @@ router.post('/CreateUser', async (req, res) => {
 
         const hasspass = await bcrypt.hash(password, salt)
 
-        const User = await UserModel({ name, email, password: hasspass , roles});
+        const User = await UserModel({ name, email, password: hasspass, roles });
 
         await User.save();
 
@@ -34,7 +45,7 @@ router.post('/CreateUser', async (req, res) => {
             UserId: {
                 id: User._id,
             },
-            roles:User.roles
+            roles: User.roles
         }
 
         const token = jwt.sign(payload, process.env.JWT_SECRET)
@@ -83,12 +94,28 @@ router.get("/getUser/:Id", async (req, res) => {
 
 router.put("/updateUser/:Id", async (req, res) => {
 
-    const { name, email, password  } = req.body;
+    const { name, email, password } = req.body;
     const userId = req.params.Id;
 
     if (!name || !email || !password) {
         return res.status(400).json({ message: "Please fill all the value" })
     }
+    if (name === "!@#$%^&*()_+") {
+        return res.status(400).json({ message: "Not use the symbol in name value" })
+    }
+    const nameRegex = /^[A-Za-z\s]+$/;  
+
+    if (!nameRegex.test(name)) {
+        return res.status(400).json({ message: "Name can only contain letters and spaces" });
+    }
+
+
+
+    if (password < 8) {
+        return res.status(400).json({ message: "Password length must be greater than or equal to 8 characters" })
+    }
+   
+
     if (!userId) {
         return res.status(400).json({ message: "User Id is required!" })
     }
@@ -168,7 +195,7 @@ router.post('/login', async (req, res) => {
             UserId: {
                 id: user._id,
             },
-            roles:user.roles
+            roles: user.roles
         }
 
         const token = jwt.sign(payload, process.env.JWT_SECRET)
